@@ -1,6 +1,5 @@
 import User from '../models/UserModel.js';
 import bcrypt from 'bcrypt';
-import { where } from 'sequelize';
 
 export const getUsers = async (req, res) => {
     try {
