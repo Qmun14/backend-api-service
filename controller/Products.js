@@ -115,6 +115,31 @@ export const updateProduct = async (req, res) => {
 
 }
 
-export const deleteProduct = (req, res) => {
-
+export const deleteProduct = async (req, res) => {
+    try {
+        const product = await Product.findOne({
+            where: {
+                uuid: req.params.id
+            }
+        });
+        if (!product) return res.status(404).json({ message: "Data tidak ditemukan!" });
+        const name = product.name;
+        if (req.role === "admin") {
+            await Product.destroy({
+                where: {                                                                //Jika user login sebagai admin maka user admin dapat..
+                    id: product.id                                                      //..menghapus product yang diupload oleh seluruh user berdasarkan parameter id product di params yang di dbase nya itu adalah uuid product
+                }
+            });
+        } else {
+            if (req.userId !== product.userId) return res.status(403).json({ message: "Akses terlarang!" });
+            await Product.destroy({
+                where: {                                                                  //Jika user login sebagai user-biasa maka user hanya..
+                    [Op.and]: [{ id: product.id }, { userId: req.userId }]                  //..menghapus product yang diupload oleh user tersebut berdasarkan parameter id product di params yang di dbase nya itu adalah uuid product
+                }
+            });
+        }
+        res.status(200).json({ message: `Product ${name} berhasil dihapus!` });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
 }
