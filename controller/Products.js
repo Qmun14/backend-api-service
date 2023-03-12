@@ -1,5 +1,6 @@
 import Product from '../models/ProductModel.js';
 import User from "../models/UserModel.js";
+import { Op } from 'sequelize';
 
 export const getProducts = async (req, res) => {
     try {
@@ -25,13 +26,48 @@ export const getProducts = async (req, res) => {
             });
         }
         res.status(200).json(response);
-    } catch (error) {
-        res.status(500).json({ msg: error.message });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
     }
 
 }
 
-export const getProductById = (req, res) => {
+export const getProductById = async (req, res) => {
+    try {
+        const product = await Product.findOne({
+            where: {
+                uuid: req.params.id
+            }
+        });
+        if (!product) return res.status(404).json({ message: "Data tidak ditemukan!" });
+        let response;
+        if (req.role === "admin") {
+            response = await Product.findOne({
+                attributes: ['uuid', 'name', 'price'],
+                where: {
+                    id: product.id                          //Jika user login sebagai admin maka user admin dapat..
+                },                                          //..melihat product yang diupload oleh seluruh user berdasarkan parameter id product di params yang di dbase nya itu adalah uuid product
+                include: [{
+                    model: User,
+                    attributes: ['name', 'email']
+                }]
+            });
+        } else {
+            response = await Product.findOne({
+                attributes: ['uuid', 'name', 'price'],
+                where: {
+                    [Op.and]: [{ id: product.id }, { userId: req.userId }]          //Jika user login sebagai user-biasa maka user hanya.. 
+                },                                                                  //..melihat product yang diupload oleh user tersebut berdasarkan parameter id product di params yang di dbase nya itu adalah uuid product
+                include: [{
+                    model: User,
+                    attributes: ['name', 'email']
+                }]
+            });
+        }
+        res.status(200).json(response);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
 
 }
 
@@ -44,8 +80,8 @@ export const createProduct = async (req, res) => {
             userId: req.userId
         });
         res.status(201).json({ message: "success" });
-    } catch (error) {
-        res.status(500).json({ msg: error.message });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
     }
 }
 
