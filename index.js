@@ -7,6 +7,7 @@ import SequelizeStore from 'connect-session-sequelize';
 import UserRoute from './routes/UserRoute.js';
 import ProductRoute from './routes/ProductRoute.js';
 import AuthRoute from './routes/AuthRoute.js';
+import CustomerRoute from './routes/CustomerRoute.js';
 dotenv.config()
 
 const URL = '/api/v1';
@@ -48,6 +49,7 @@ app.get('/', (req, res) => {
 app.use(`${URL}`, UserRoute);
 app.use(`${URL}`, ProductRoute);
 app.use(`${URL}`, AuthRoute);
+app.use(`${URL}`, CustomerRoute);
 
 // store.sync();
 
